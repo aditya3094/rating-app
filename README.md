@@ -68,3 +68,51 @@ npm run dev
 - Remove `node_modules` folders before pushing to GitHub (this repo already ignores them).
 - If MongoDB is remote, update `MONGO_URI` accordingly.
 
+
+## Note about database choice
+
+The original challenge suggested using **MySQL** or **PostgreSQL**.  
+For this submission I used **MongoDB (Atlas)** to accelerate development and focus on delivering complete functionality (authentication, role-based access, seeding, dashboards, and rating logic).
+
+### Why MongoDB
+- Rapid prototyping and simpler JSON-style documents.
+- Easy cloud seeding and testing with MongoDB Atlas.
+- Full feature set implemented with MERN stack efficiency.
+
+### How to port to MySQL/PostgreSQL
+The MongoDB collections map directly to relational tables.
+
+| Mongo Collection | SQL Table | Notes |
+|------------------|----------|------|
+| `users`          | `users`  | id (PK), name, email (unique), password, address, role |
+| `stores`         | `stores` | id (PK), name, email, address, owner_id (FK -> users.id) |
+| `ratings`        | `ratings`| id (PK), rating (1-5), user_id (FK -> users.id), store_id (FK -> stores.id), created_at |
+
+#### Example SQL
+```sql
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(60) NOT NULL,
+  email VARCHAR(200) UNIQUE NOT NULL,
+  password VARCHAR(255) NOT NULL,
+  address VARCHAR(400),
+  role VARCHAR(10) NOT NULL DEFAULT 'user',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE stores (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  email VARCHAR(200) NOT NULL,
+  address VARCHAR(400),
+  owner_id INTEGER NOT NULL REFERENCES users(id),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE ratings (
+  id SERIAL PRIMARY KEY,
+  rating TINYINT NOT NULL CHECK (rating BETWEEN 1 AND 5),
+  user_id INTEGER NOT NULL REFERENCES users(id),
+  store_id INTEGER NOT NULL REFERENCES stores(id),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
